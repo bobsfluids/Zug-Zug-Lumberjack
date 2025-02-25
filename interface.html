@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zug Zug Lumberjack</title>
+  <style>
+    body {
+      background-color: #2d2d2d;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .game-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #D4A017;
+      text-shadow: 2px 2px 2px #000;
+      margin-bottom: 20px;
+    }
+
+    .resource-panel {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+      background-color: #3a3a3a;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .resource {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .resource-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #D4A017;
+    }
+
+    .resource-label {
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .orc-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin: 20px 0;
+      min-height: 150px;
+    }
+
+    .orc {
+      width: 80px;
+      height: 120px;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s;
+      user-select: none;
+    }
+
+    .orc:hover {
+      transform: scale(1.05);
+    }
+
+    .orc-body {
+      width: 80px;
+      height: 100px;
+      background-color: #1a9c45;
+      border-radius: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .orc.asleep .orc-body {
+      background-color: #136e31;
+    }
+
+    .orc-head {
+      width: 60px;
+      height: 60px;
+      background-color: #299e47;
+      border: 3px solid #0e5a28;
+      border-radius: 50%;
+      position: absolute;
+      top: -30px;
+      left: 10px;
+      z-index: 2;
+    }
+
+    .orc.asleep .orc-head {
+      background-color: #1b7934;
+    }
+
+    .orc-eyes {
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: space-evenly;
+    }
+
+    .orc-eye {
+      width: 15px;
+      height: 10px;
+      background-color: #fff;
+      border-radius: 50%;
+    }
+
+    .orc.asleep .orc-eye {
+      height: 2px;
+      margin-top: 4px;
+    }
+
+    .orc-mouth {
+      width: 30px;
+      height: 10px;
+      background-color: #111;
+      border-radius: 0 0 10px 10px;
+      position: absolute;
+      bottom: 15px;
+      left: 15px;
+    }
+
+    .orc.asleep .orc-mouth {
+      height: 5px;
+      width: 10px;
+      border-radius: 50%;
+      bottom: 18px;
+      left: 25px;
+    }
+
+    .speech-bubble {
+      position: absolute;
+      top: -55px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: white;
+      color: black;
+      padding: 5px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 10;
+      opacity: 0;
+      animation: speech-fade 2s infinite;
+    }
+
+    @keyframes speech-fade {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 1; }
+    }
+
+    .speech-bubble:after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 8px 6px 0;
+      border-style: solid;
+      border-color: white transparent transparent;
+    }
+
+    .axe {
+      position: absolute;
+      width: 40px;
+      height: 60px;
+      bottom: 0;
+      right: -20px;
+      z-index: 0;
+    }
+    
+    .axe-handle {
+      position: absolute;
+      width: 8px;
+      height: 50px;
+      background-color: #8B4513;
+      bottom: 0;
+      left: 16px;
+      border-radius: 2px;
+    }
+
+    .axe-head {
+      position: absolute;
+      width: 30px;
+      height: 20px;
+      background-color: #A8A8A8;
+      top: 5px;
+      left: 5px;
+      clip-path: polygon(0 50%, 50% 0, 100% 50%, 50% 100%);
+    }
+
+    .orc.asleep .axe {
+      transform: rotate(45deg);
+      right: -10px;
+      bottom: -10px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      background-color: #8B5A2B;
+      color: white;
+      border: 2px solid #5C3D1B;
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #A67C52;
+    }
+
+    button:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+
+    .instructions {
+      background-color: #3a3a3a;
+      padding: 10px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    .tree {
+      width: 50px;
+      height: 80px;
+      position: relative;
+      margin: 0 auto;
+    }
+
+    .tree-trunk {
+      width: 20px;
+      height: 30px;
+      background-color: #8B4513;
+      position: absolute;
+      bottom: 0;
+      left: 15px;
+      border-radius: 2px;
+    }
+
+    .tree-top {
+      width: 50px;
+      height: 60px;
+      background-color: #2E8B57;
+      position: absolute;
+      top: 0;
+      left: 0;
+      border-radius: 50% 50% 20% 20%;
+    }
+
+    .tree-container {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    .chopping-animation {
+      animation: chop 0.5s ease-in-out;
+    }
+
+    @keyframes chop {
+      0% { transform: rotate(0deg); }
+      50% { transform: rotate(-20deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    .zz {
+      position: absolute;
+      color: white;
+      font-weight: bold;
+      font-size: 20px;
+      top: -20px;
+      right: -5px;
+      opacity: 0;
+      animation: float-up 2s infinite;
+    }
+
+    .orc.asleep .zz {
+      opacity: 1;
+    }
+
+    @keyframes float-up {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: translateY(-20px) rotate(10deg); opacity: 0; }
+    }
+
+    .game-title {
+      font-size: 32px;
+      margin-bottom: 10px;
+      color: #FFD700;
+      text-shadow: 2px 2px 4px #000;
+    }
+
+    .gold-coin {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background-color: #FFD700;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+      border: 1px solid #B8860B;
+    }
+
+    .tree-icon {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-right: 5px;
+      vertical-align: middle;
+      position: relative;
+    }
+
+    .tree-icon-trunk {
+      width: 6px;
+      height: 10px;
+      background-color: #8B4513;
+      position: absolute;
+      bottom: 0;
+      left: 7px;
+    }
+
+    .tree-icon-top {
+      width: 16px;
+      height: 14px;
+      background-color: #2E8B57;
+      position: absolute;
+      top: 0;
+      left: 2px;
+      border-radius: 50% 50% 20% 20%;
+    }
+
+    .orc-icon {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background-color: #1a9c45;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+      border: 1px solid #0e5a28;
+    }
+
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #3a3a3a;
+      border: 3px solid #D4A017;
+      border-radius: 10px;
+      padding: 20px;
+      z-index: 100;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+      display: none;
+    }
+
+    .popup h2 {
+      color: #D4A017;
+      margin-top: 0;
+    }
+
+    .popup button {
+      margin-top: 20px;
+    }
+
+    .splash-animation {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background-color: rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: splash 0.5s forwards;
+    }
+
+    @keyframes splash {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(3); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1 class="game-title">Zug Zug Lumberjack</h1>
+    <div class="resource-panel">
+      <div class="resource">
+        <div class="resource-label"><span class="tree-icon"><div class="tree-icon-trunk"></div><div class="tree-icon-top"></div></span>Trees:</div>
+        <div id="tree-counter" class="resource-value">0</div>
+      </div>
+      <div class="resource">
+        <div class="resource-label"><span class="orc-icon"></span>Orcs:</div>
+        <div id="orc-counter" class="resource-value">1</div>
+      </div>
+      <div class="resource">
+        <div class="resource-label"><span class="gold-coin"></span>Gold:</div>
+        <div id="gold-counter" class="resource-value">0</div>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button id="buy-orc">Buy Orc (10 trees)</button>
+      <button id="upgrade-axe">Upgrade Axe (15 gold)</button>
+    </div>
+
+    <div class="tree-container">
+      <div class="tree">
+        <div class="tree-trunk"></div>
+        <div class="tree-top"></div>
+      </div>
+    </div>
+    
+    <div id="orc-container" class="orc-container">
+      <!-- Orcs will be rendered here -->
+    </div>
+    
+    <div class="instructions">
+      <p>Click on sleeping orcs to wake them up! Orcs say "Zug Zug" while working and fall asleep randomly.</p>
+      <p>Awake orcs chop trees and occasionally find gold. Use trees to hire more orcs and gold to upgrade axes.</p>
+    </div>
+  </div>
+
+  <div id="welcome-popup" class="popup">
+    <h2>Welcome to Zug Zug Lumberjack!</h2>
+    <p>Your goal is to manage a group of orc peons who chop trees.</p>
+    <p>The problem is, they keep falling asleep on the job!</p>
+    <p>Click on sleeping orcs to wake them up and keep the lumber flowing.</p>
+    <button id="start-game">Start Chopping!</button>
+  </div>
+  
+  <script>
+    // Game state
+    const gameState = {
+      trees: 0,
+      orcs: 1,
+      orcCost: 10,
+      treesPerChop: 1,
+      chopInterval: 2000, // ms between chop attempts
+      sleepChance: 0.3,   // probability an orc falls asleep on each chop
+      orcStates: [],      // array to track each orc's state (awake/asleep)
+      gold: 0,
+      upgradeAxeCost: 15,
+      upgradeAxeLevel: 1
+    };
+
+    // Initialize orc states
+    gameState.orcStates = Array(gameState.orcs).fill("awake");
+
+    // DOM elements
+    const treeCounter = document.getElementById("tree-counter");
+    const orcCounter = document.getElementById("orc-counter");
+    const goldCounter = document.getElementById("gold-counter");
+    const orcContainer = document.getElementById("orc-container");
+    const buyOrcButton = document.getElementById("buy-orc");
+    const upgradeAxeButton = document.getElementById("upgrade-axe");
+    const welcomePopup = document.getElementById("welcome-popup");
+    const startGameButton = document.getElementById("start-game");
+    const treeTop = document.querySelector(".tree-top");
+
+    // Show welcome popup
+    welcomePopup.style.display = "block";
+
+    // Start game when button is clicked
+    startGameButton.addEventListener("click", () => {
+      welcomePopup.style.display = "none";
+      initializeGame();
+    });
+
+    // Set up game UI
+    function initializeGame() {
+      updateCounters();
+      renderOrcs();
+      setInterval(attemptChop, gameState.chopInterval);
+      buyOrcButton.innerText = `Buy Orc (${gameState.orcCost} trees)`;
+      upgradeAxeButton.innerText = `Upgrade Axe (${gameState.upgradeAxeCost} gold)`;
+    }
+
+    // Update counters display
+    function updateCounters() {
+      treeCounter.innerText = gameState.trees;
+      orcCounter.innerText = gameState.orcs;
+      goldCounter.innerText = gameState.gold;
+      
+      // Enable/disable buttons based on resources
+      buyOrcButton.disabled = gameState.trees < gameState.orcCost;
+      upgradeAxeButton.disabled = gameState.gold < gameState.upgradeAxeCost;
+    }
+
+    // Render all orcs in the container
+    function renderOrcs() {
+      orcContainer.innerHTML = "";
+      
+      gameState.orcStates.forEach((state, index) => {
+        const orcElement = document.createElement("div");
+        orcElement.className = `orc ${state}`;
+        orcElement.dataset.index = index;
+        
+        // Create orc body
+        const orcBody = document.createElement("div");
+        orcBody.className = "orc-body";
+        orcElement.appendChild(orcBody);
+        
+        // Create orc head
+        const orcHead = document.createElement("div");
+        orcHead.className = "orc-head";
+        orcElement.appendChild(orcHead);
+        
+        // Create orc eyes
+        const orcEyes = document.createElement("div");
+        orcEyes.className = "orc-eyes";
+        orcHead.appendChild(orcEyes);
+        
+        const leftEye = document.createElement("div");
+        leftEye.className = "orc-eye";
+        orcEyes.appendChild(leftEye);
+        
+        const rightEye = document.createElement("div");
+        rightEye.className = "orc-eye";
+        orcEyes.appendChild(rightEye);
+        
+        // Create orc mouth
+        const orcMouth = document.createElement("div");
+        orcMouth.className = "orc-mouth";
+        orcHead.appendChild(orcMouth);
+        
+        // Add speech bubble with "Zug Zug!"
+        const speechBubble = document.createElement("div");
+        speechBubble.className = "speech-bubble";
+        speechBubble.innerText = state === "awake" ? "Zug Zug!" : "Zzz...";
+        orcElement.appendChild(speechBubble);
+        
+        // Add Z's for sleeping orcs
+        const zz = document.createElement("div");
+        zz.className = "zz";
+        zz.innerHTML = "Z";
+        orcElement.appendChild(zz);
+        
+        // Add axe
+        const axe = document.createElement("div");
+        axe.className = "axe";
+        
+        const axeHandle = document.createElement("div");
+        axeHandle.className = "axe-handle";
+        axe.appendChild(axeHandle);
+        
+        const axeHead = document.createElement("div");
+        axeHead.className = "axe-head";
+        axe.appendChild(axeHead);
+        
+        orcElement.appendChild(axe);
+        
+        // Add click listener to wake up orc
+        orcElement.addEventListener("click", (e) => {
+          if (state === "asleep") {
+            wakeOrc(index);
+            
+            // Add splash animation effect on click
+            const splash = document.createElement("div");
+            splash.className = "splash-animation";
+            splash.style.left = (e.clientX - 15) + "px";
+            splash.style.top = (e.clientY - 15) + "px";
+            document.body.appendChild(splash);
+            
+            // Remove splash element after animation completes
+            setTimeout(() => {
+              document.body.removeChild(splash);
+            }, 500);
+          }
+        });
+        
+        orcContainer.appendChild(orcElement);
+      });
+    }
+
+    // Attempt to chop trees with all awake orcs
+    function attemptChop() {
+      let activeOrcs = 0;
+      
+      gameState.orcStates.forEach((state, index) => {
+        if (state === "awake") {
+          // Orc chops tree
+          gameState.trees += gameState.treesPerChop * gameState.upgradeAxeLevel;
+          activeOrcs++;
+          
+          // Add chopping animation to tree
+          const orcElement = orcContainer.children[index];
+          const axeElement = orcElement.querySelector(".axe");
+          axeElement.classList.add("chopping-animation");
+          
+          // Remove animation class after it completes
+          setTimeout(() => {
+            axeElement.classList.remove("chopping-animation");
+          }, 500);
+          
+          // Wiggle the tree a bit
+          treeTop.style.transform = "translateX(3px)";
+          setTimeout(() => {
+            treeTop.style.transform = "translateX(-3px)";
+            setTimeout(() => {
+              treeTop.style.transform = "translateX(0)";
+            }, 100);
+          }, 100);
+          
+          // Check if orc falls asleep
+          if (Math.random() < gameState.sleepChance) {
+            gameState.orcStates[index] = "asleep";
+            playSound("sleep");
+          } else {
+            playSound("chop");
+          }
+        }
+      });
+      
+      // Convert some trees to gold (for upgrades)
+      if (activeOrcs > 0 && Math.random() < 0.2) {
+        const goldFound = Math.floor(activeOrcs * 0.5 * gameState.upgradeAxeLevel) + 1;
+        gameState.gold += goldFound;
+        
+        // Show gold gained
+        const goldPopup = document.createElement("div");
+        goldPopup.innerText = `+${goldFound} Gold!`;
+        goldPopup.style.position = "absolute";
+        goldPopup.style.color = "#FFD700";
+        goldPopup.style.fontWeight = "bold";
+        goldPopup.style.fontSize = "18px";
+        goldPopup.style.top = "20px";
+        goldPopup.style.left = "50%";
+        goldPopup.style.transform = "translateX(-50%)";
+        goldPopup.style.textShadow = "1px 1px 2px black";
+        goldPopup.style.pointerEvents = "none";
+        goldPopup.style.zIndex = "50";
+        goldPopup.style.opacity = "1";
+        goldPopup.style.transition = "all 1.5s";
+        
+        document.querySelector(".resource-panel").appendChild(goldPopup);
+        
+        // Animate and remove
+        setTimeout(() => {
+          goldPopup.style.top = "-20px";
+          goldPopup.style.opacity = "0";
+          setTimeout(() => {
+            goldPopup.remove();
+          }, 1500);
+        }, 100);
+      }
+      
+      updateCounters();
+      renderOrcs();
+    }
+
+    // Wake up a sleeping orc
+    function wakeOrc(index) {
+      if (gameState.orcStates[index] === "asleep") {
+        gameState.orcStates[index] = "awake";
+        playSound("wake");
+        renderOrcs();
+      }
+    }
+
+    // Buy a new orc
+    function buyOrc() {
+      if (gameState.trees >= gameState.orcCost) {
+        gameState.trees -= gameState.orcCost;
+        gameState.orcs++;
+        gameState.orcStates.push("awake");
+        
+        // Increase cost for next orc
+        gameState.orcCost = Math.floor(gameState.orcCost * 1.5);
+        buyOrcButton.innerText = `Buy Orc (${gameState.orcCost} trees)`;
+        
+        playSound("recruit");
+        updateCounters();
+        renderOrcs();
+      }
+    }
+
+    // Upgrade axes to chop more trees per swing
+    function upgradeAxe() {
+      if (gameState.gold >= gameState.upgradeAxeCost) {
+        gameState.gold -= gameState.upgradeAxeCost;
+        gameState.upgradeAxeLevel++;
+        
+        // Increase cost for next upgrade
+        gameState.upgradeAxeCost = Math.floor(gameState.upgradeAxeCost * 2);
+        upgradeAxeButton.innerText = `Upgrade Axe (${gameState.upgradeAxeCost} gold)`;
+        
+        playSound("upgrade");
+        updateCounters();
+        
+        // Show upgrade effect
+        const upgradeEffect = document.createElement("div");
+        upgradeEffect.innerText = `Axes Level ${gameState.upgradeAxeLevel}!`;
+        upgradeEffect.style.position = "absolute";
+        upgradeEffect.style.color = "#FFD700";
+        upgradeEffect.style.fontWeight = "bold";
+        upgradeEffect.style.fontSize = "24px";
+        upgradeEffect.style.top = "50%";
+        upgradeEffect.style.left = "50%";
+        upgradeEffect.style.transform = "translate(-50%, -50%)";
+        upgradeEffect.style.textShadow = "2px 2px 4px black";
+        upgradeEffect.style.pointerEvents = "none";
+        upgradeEffect.style.zIndex = "100";
+        upgradeEffect.style.opacity = "1";
+        upgradeEffect.style.transition = "all 2s";
+        
+        document.querySelector(".game-container").appendChild(upgradeEffect);
+        
+        // Animate and remove
+        setTimeout(() => {
+          upgradeEffect.style.top = "30%";
+          upgradeEffect.style.opacity = "0";
+          setTimeout(() => {
+            upgradeEffect.remove();
+          }, 2000);
+        }, 100);
+      }
+    }
+
+    // Simple sound effect simulation
+    function playSound(type) {
+      // In a browser environment, this function would play actual sounds
+      console.log(`Playing sound: ${type}`);
+    }
+
+    // Event listeners
+    buyOrcButton.addEventListener("click", buyOrc);
+    upgradeAxeButton.addEventListener("click", upgradeAxe);
+  </script>
+</body>
+</html>
